@@ -1,0 +1,27 @@
+{
+  "name": "gold-tier-mcp-server",
+  "version": "2.0.0",
+  "description": "Gold Tier AI Employee - MCP Server for email, LinkedIn, and Odoo accounting",
+  "main": "mcp_server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node mcp_server.js",
+    "test": "node test_email.js",
+    "test-odoo": "node test_odoo.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^17.2.4",
+    "nodemailer": "^6.9.0"
+  },
+  "keywords": [
+    "mcp",
+    "ai-employee",
+    "email",
+    "odoo",
+    "accounting",
+    "automation"
+  ],
+  "author": "Gold Tier AI Employee",
+  "license": "MIT"
+}

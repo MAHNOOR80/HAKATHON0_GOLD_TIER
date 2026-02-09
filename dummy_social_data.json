@@ -1,0 +1,10 @@
+{
+  "posts": [
+    {"date": "2026-02-08", "content": "Excited about new AI consulting packages!", "likes": 45, "comments": 12},
+    {"date": "2026-02-09", "content": "Freelance tips for 2026", "likes": 28, "comments": 8}
+  ],
+  "comments": [
+    {"post": "AI consulting", "user": "client_john", "text": "Interested in pricing for team of 5", "potential_lead": true},
+    {"post": "Freelance tips", "user": "random_user", "text": "Nice post!", "potential_lead": false}
+  ]
+}

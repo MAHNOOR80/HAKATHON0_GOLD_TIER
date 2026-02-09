@@ -1,0 +1,17 @@
+# Environment variables (secrets)
+.env
+mcp_server/.env
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# Bank data (sensitive financial records)
+Bank_Drops/*.csv
+
+# OS
+.DS_Store
+Thumbs.db
