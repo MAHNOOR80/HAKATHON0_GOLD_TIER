@@ -1,5 +1,5 @@
 """
-Silver Tier AI Employee - Task Scheduler
+Gold Tier AI Employee - Task Scheduler
 
 This script runs periodically (every hour) to check for pending tasks.
 When pending tasks are found, it creates a "Generate daily plan" task
@@ -8,8 +8,9 @@ to trigger the Plan_Tasks_Skill.
 Features:
 - Hourly scheduling using the 'schedule' library
 - Automatic task creation for planning
-- Logging to System_Log.md and scheduler_errors.log
-- Error handling that never crashes
+- Error handling that never crashes (Error_Recovery_Skill pattern)
+- Error logging with traceback via centralized log_manager
+- Auto-rotation when log files exceed 1 MB
 - Duplicate prevention (won't create plan task if one already exists)
 
 Requirements:
@@ -24,6 +25,13 @@ Press Ctrl+C to stop the scheduler.
 import os
 import time
 from datetime import datetime
+
+# Centralized logging — replaces duplicated log_error / log_to_system_log
+from log_manager import (
+    log_error as _base_log_error,
+    log_to_system_log,
+    ensure_folder_exists,
+)
 
 # Try to import schedule library, provide helpful message if not installed
 try:
@@ -70,163 +78,21 @@ SOCIAL_SUMMARY_INTERVAL_HOURS = 24
 SOCIAL_SUMMARY_PREFIX = "task_social_summary"
 PLANS_FOLDER = os.path.join(SCRIPT_DIR, "Plans")
 
+# CEO Briefing — weekly on Monday at 09:00 (Gold Tier).
+CEO_BRIEFING_DAY = "monday"
+CEO_BRIEFING_TIME = "09:00"
+CEO_BRIEFING_PREFIX = "task_ceo_briefing"
+
 
 # =============================================================================
-# ERROR HANDLING UTILITIES
+# ERROR HANDLING — delegates to centralized log_manager.py
 # =============================================================================
 
 def log_error(error_message):
-    """
-    Write an error message to the error log file with a timestamp.
+    """Route errors to the centralized log_manager with this component's log file."""
+    _base_log_error(error_message, error_log_file=ERROR_LOG_FILE)
 
-    This function is called whenever something goes wrong. It writes the error
-    to a log file so you can review what happened later.
-
-    Args:
-        error_message: A string describing what went wrong.
-
-    Why this matters:
-        - Errors are recorded even if no one is watching
-        - You can review the log file later to diagnose issues
-        - The script continues running instead of crashing
-    """
-    # Get the current time for the log entry
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # Format the log entry with timestamp and error message
-    log_entry = f"[{timestamp}] ERROR: {error_message}\n"
-
-    try:
-        # Ensure the Logs folder exists before writing
-        os.makedirs(LOGS_FOLDER, exist_ok=True)
-
-        # Open the log file in "append" mode ('a') so we add to it, not overwrite
-        with open(ERROR_LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(log_entry)
-
-        # Also print to console so the user sees it immediately
-        print(f"[ERROR LOGGED] {error_message}")
-
-    except Exception as e:
-        # If we can't even write to the log file, at least print to console
-        print(f"[CRITICAL] Could not write to error log: {e}")
-        print(f"[ORIGINAL ERROR] {error_message}")
-
-
-def log_to_system_log(action, details):
-    """
-    Write an entry to the System_Log.md file.
-
-    This adds a row to the Activity Log table in System_Log.md,
-    following the established format used by other AI Employee components.
-
-    Args:
-        action: Short description of the action (e.g., "Scheduler Check")
-        details: Longer description of what happened
-
-    Returns:
-        bool: True if logging succeeded, False otherwise
-    """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-    try:
-        # Ensure Logs folder exists
-        os.makedirs(LOGS_FOLDER, exist_ok=True)
-
-        # Check if System_Log.md exists
-        if not os.path.exists(SYSTEM_LOG_FILE):
-            # Create a basic System_Log.md if it doesn't exist
-            create_system_log()
-
-        # Read the current content
-        with open(SYSTEM_LOG_FILE, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        # Find the table header row and insert our new entry after it
-        # The table format is: | Timestamp | Action | Details |
-        table_header = "| Timestamp | Action | Details |"
-        separator = "|-----------|--------|---------|"
-
-        # Create the new log entry row
-        new_row = f"| {timestamp} | {action} | {details} |"
-
-        # Find where to insert (after the separator line)
-        if separator in content:
-            # Insert new row right after the separator
-            parts = content.split(separator, 1)
-            if len(parts) == 2:
-                # Add newline + new row after separator
-                new_content = parts[0] + separator + "\n" + new_row + parts[1]
-
-                with open(SYSTEM_LOG_FILE, "w", encoding="utf-8") as f:
-                    f.write(new_content)
-
-                return True
-
-        # If we couldn't find the expected format, log error
-        log_error("System_Log.md format not recognized, could not add entry")
-        return False
-
-    except Exception as e:
-        log_error(f"Failed to write to System_Log.md: {e}")
-        return False
-
-
-def create_system_log():
-    """
-    Create a new System_Log.md file with the correct structure.
-
-    This is called if System_Log.md doesn't exist when we try to log.
-    """
-    content = """# System Log
-
-Central log for all AI Employee activity and system events.
-
----
-
-## Activity Log
-
-| Timestamp | Action | Details |
-|-----------|--------|---------|
-| _System initialized_ | Setup | Scheduler created System_Log.md |
-
----
-
-_New entries should be added at the top of the Activity Log table._
-"""
-
-    try:
-        with open(SYSTEM_LOG_FILE, "w", encoding="utf-8") as f:
-            f.write(content)
-        print(f"[SETUP] Created System_Log.md")
-    except Exception as e:
-        log_error(f"Failed to create System_Log.md: {e}")
-
-
-def ensure_folder_exists(folder_path, folder_name):
-    """
-    Check if a folder exists, and create it if it doesn't.
-
-    Args:
-        folder_path: The full path to the folder.
-        folder_name: A friendly name for the folder (used in messages).
-
-    Returns:
-        bool: True if the folder exists (or was created), False if creation failed.
-    """
-    try:
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-            print(f"[SETUP] Created {folder_name} folder: {folder_path}")
-        return True
-
-    except PermissionError:
-        log_error(f"Permission denied when creating {folder_name} folder at {folder_path}")
-        return False
-
-    except Exception as e:
-        log_error(f"Failed to create {folder_name} folder: {e}")
-        return False
+# log_to_system_log and ensure_folder_exists are imported directly from log_manager
 
 
 # =============================================================================
@@ -561,6 +427,172 @@ def scheduled_social_summary():
         log_error(f"Error in social summary check: {e}")
 
 
+def ceo_briefing_exists_this_week():
+    """
+    Check if a CEO Briefing has already been generated for the current week.
+    Looks for /Plans/CEO_Briefing_<date>.md where <date> falls in the current
+    Monday-to-Sunday window.
+
+    Returns:
+        bool: True if this week's briefing already exists.
+    """
+    try:
+        if not os.path.exists(PLANS_FOLDER):
+            return False
+
+        # Calculate the Monday of the current week
+        today = datetime.now().date()
+        monday = today - __import__("datetime").timedelta(days=today.weekday())
+
+        for item in os.listdir(PLANS_FOLDER):
+            if item.startswith("CEO_Briefing_") and item.endswith(".md"):
+                # Extract date from filename: CEO_Briefing_YYYY-MM-DD.md
+                try:
+                    date_str = item.replace("CEO_Briefing_", "").replace(".md", "")
+                    file_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    # Check if the file date falls within the current week
+                    if monday <= file_date <= monday + __import__("datetime").timedelta(days=6):
+                        return True
+                except ValueError:
+                    continue
+
+        return False
+
+    except Exception as e:
+        log_error(f"Error checking CEO briefing: {e}")
+        return False
+
+
+def ceo_briefing_task_exists():
+    """
+    Check if a CEO briefing trigger task already exists in Needs_Action.
+    Prevents creating duplicate trigger tasks.
+
+    Returns:
+        bool: True if a CEO briefing task already exists, False otherwise.
+    """
+    try:
+        if not os.path.exists(NEEDS_ACTION_FOLDER):
+            return False
+
+        for item in os.listdir(NEEDS_ACTION_FOLDER):
+            if item.lower().startswith(CEO_BRIEFING_PREFIX):
+                return True
+
+        return False
+
+    except Exception as e:
+        log_error(f"Error checking for existing CEO briefing task: {e}")
+        return False
+
+
+def create_ceo_briefing_task():
+    """
+    Create a CEO Briefing trigger task in Needs_Action.
+    This task tells Ralph Loop (or manual prompt) to execute the
+    full 4-phase CEO Briefing audit.
+
+    Returns:
+        str: Path to the created task file, or None if creation failed.
+    """
+    try:
+        if not ensure_folder_exists(NEEDS_ACTION_FOLDER, "Needs_Action"):
+            return None
+
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        date_stamp = datetime.now().strftime("%Y-%m-%d")
+
+        task_filename = f"{CEO_BRIEFING_PREFIX}_{date_stamp}.md"
+        task_path = os.path.join(NEEDS_ACTION_FOLDER, task_filename)
+
+        task_content = f"""---
+type: ceo_briefing
+status: pending
+priority: high
+created_at: {timestamp}
+related_files: []
+approval_needed: false
+mcp_action: []
+---
+
+# Monday Morning CEO Briefing — {date_stamp}
+
+## Description
+
+The scheduler has triggered the weekly CEO Briefing. Execute the
+CEO_Briefing_Skill using Ralph_Wiggum_Loop_Skill to perform the
+full 4-phase audit and compile the executive summary.
+
+## Audit Phases (Ralph Loop)
+
+- [ ] **Phase 1 — Financial Audit:** Read bank tasks, query Odoo get_report
+- [ ] **Phase 2 — Project Audit:** Scan Needs_Action, Pending_Approval, Done
+- [ ] **Phase 3 — Social Audit:** Read latest Social_Summary from Plans
+- [ ] **Phase 4 — Compile Briefing:** Generate CEO_Briefing_{date_stamp}.md, create delivery task
+
+## Delivery
+
+After briefing is compiled, create a delivery task with:
+- `approval_needed: true`
+- `mcp_action: ["send_email"]`
+- Route through Approval_Check_Skill before sending
+
+## Notes
+
+- **Triggered by:** Scheduler (weekly, {CEO_BRIEFING_DAY} {CEO_BRIEFING_TIME})
+- **Detected at:** {timestamp}
+- **Skill:** CEO_Briefing_Skill.md
+- **Loop:** Ralph_Wiggum_Loop_Skill (4 iterations, max 8)
+- Briefing compilation is read-only (no approval needed)
+- Only the delivery (email/LinkedIn) requires approval
+"""
+
+        with open(task_path, "w", encoding="utf-8") as f:
+            f.write(task_content)
+
+        return task_path
+
+    except Exception as e:
+        log_error(f"Error creating CEO briefing task: {e}")
+        return None
+
+
+def scheduled_ceo_briefing():
+    """
+    Weekly CEO briefing job. Creates a briefing trigger task if this week's
+    briefing hasn't been generated yet and no trigger task is pending.
+    Runs every Monday at 09:00 via schedule library.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    print(f"\n[{timestamp}] Running weekly CEO briefing check...")
+
+    try:
+        # Check if briefing already exists for this week
+        if ceo_briefing_exists_this_week():
+            print("  -> CEO briefing already generated this week. Skipping.")
+            return
+
+        # Check if a trigger task already exists
+        if ceo_briefing_task_exists():
+            print("  -> CEO briefing task already pending. Skipping.")
+            log_to_system_log("CEO Briefing Check", "Trigger task already exists in Needs_Action")
+            return
+
+        # Create the trigger task
+        task_path = create_ceo_briefing_task()
+
+        if task_path:
+            task_name = os.path.basename(task_path)
+            print(f"  -> Created CEO briefing task: {task_name}")
+            log_to_system_log("CEO Briefing Triggered", f"Created {task_name} — weekly Monday briefing via scheduler")
+        else:
+            print("  -> Failed to create CEO briefing task!")
+            log_to_system_log("CEO Briefing Error", "Failed to create CEO briefing trigger task")
+
+    except Exception as e:
+        log_error(f"Error in CEO briefing check: {e}")
+
+
 def scheduled_check():
     """
     The main scheduled job that runs every hour.
@@ -633,9 +665,13 @@ def initialize_scheduler():
     # Schedule daily social summary (Gold Tier)
     schedule.every(SOCIAL_SUMMARY_INTERVAL_HOURS).hours.do(scheduled_social_summary)
 
+    # Schedule weekly CEO briefing (Gold Tier) — Monday at 09:00
+    schedule.every().monday.at(CEO_BRIEFING_TIME).do(scheduled_ceo_briefing)
+
     print(f"[SETUP] Scheduled task check every {CHECK_INTERVAL_MINUTES} minutes")
     print(f"[SETUP] Scheduled bank audit every {BANK_AUDIT_INTERVAL_HOURS} hours")
     print(f"[SETUP] Scheduled social summary every {SOCIAL_SUMMARY_INTERVAL_HOURS} hours")
+    print(f"[SETUP] Scheduled CEO briefing every {CEO_BRIEFING_DAY} at {CEO_BRIEFING_TIME}")
     print("[SETUP] Initialization complete.")
 
     return True
@@ -674,6 +710,9 @@ def main():
 
     print("\n[STARTUP] Running initial social summary check...")
     scheduled_social_summary()
+
+    print("\n[STARTUP] Running initial CEO briefing check...")
+    scheduled_ceo_briefing()
 
     # Log scheduler start
     log_to_system_log("Scheduler Started", f"Task scheduler initialized, checking every {CHECK_INTERVAL_MINUTES} min")

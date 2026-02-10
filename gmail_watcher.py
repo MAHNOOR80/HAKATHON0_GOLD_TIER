@@ -13,8 +13,9 @@ Features:
 - Test/demo mode that works without credentials
 - Automatic task creation from incoming emails
 - Duplicate prevention via seen message tracking
-- Error handling that never crashes
-- Error logging to Logs/gmail_watcher_errors.log
+- Error handling that never crashes (Error_Recovery_Skill pattern)
+- Error logging with traceback via centralized log_manager
+- Auto-rotation when log files exceed 1 MB
 
 Setup (Production):
     1. Enable IMAP in Gmail: Settings > See all settings > Forwarding and POP/IMAP
@@ -39,6 +40,13 @@ import imaplib
 import email
 from email.header import decode_header
 from datetime import datetime
+
+# Centralized logging — replaces duplicated log_error / log_to_system_log
+from log_manager import (
+    log_error as _base_log_error,
+    log_to_system_log,
+    ensure_folder_exists,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -71,65 +79,14 @@ demo_counter = 0
 
 
 # =============================================================================
-# ERROR HANDLING UTILITIES
+# ERROR HANDLING — delegates to centralized log_manager.py
 # =============================================================================
 
 def log_error(error_message):
-    """
-    Write an error message to the error log file with a timestamp.
-    """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_entry = f"[{timestamp}] ERROR: {error_message}\n"
+    """Route errors to the centralized log_manager with this watcher's log file."""
+    _base_log_error(error_message, error_log_file=ERROR_LOG_FILE)
 
-    try:
-        os.makedirs(LOGS_FOLDER, exist_ok=True)
-        with open(ERROR_LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(log_entry)
-        print(f"[ERROR LOGGED] {error_message}")
-    except Exception as e:
-        print(f"[CRITICAL] Could not write to error log: {e}")
-        print(f"[ORIGINAL ERROR] {error_message}")
-
-
-def log_to_system_log(action, details):
-    """
-    Add an entry to the System_Log.md activity table.
-    """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    new_row = f"| {timestamp} | {action} | {details} |"
-
-    try:
-        if not os.path.exists(SYSTEM_LOG_FILE):
-            return
-
-        with open(SYSTEM_LOG_FILE, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        # Find the header row separator and insert after it
-        marker = "|-----------|--------|---------|"
-        if marker in content:
-            content = content.replace(marker, f"{marker}\n{new_row}")
-            with open(SYSTEM_LOG_FILE, "w", encoding="utf-8") as f:
-                f.write(content)
-    except Exception as e:
-        log_error(f"Could not update System_Log: {e}")
-
-
-def ensure_folder_exists(folder_path, folder_name):
-    """
-    Check if a folder exists, and create it if it doesn't.
-    """
-    try:
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-            print(f"[SETUP] Created {folder_name} folder: {folder_path}")
-        return True
-    except PermissionError:
-        log_error(f"Permission denied when creating {folder_name} folder at {folder_path}")
-        return False
-    except Exception as e:
-        log_error(f"Failed to create {folder_name} folder: {e}")
-        return False
+# log_to_system_log and ensure_folder_exists are imported directly from log_manager
 
 
 # =============================================================================

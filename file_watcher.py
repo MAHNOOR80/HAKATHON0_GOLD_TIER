@@ -7,8 +7,9 @@ in the Needs_Action folder for processing.
 
 Features:
 - Automatic folder creation if missing
-- Error handling that never crashes
-- Error logging to Logs/watcher_errors.log
+- Error handling that never crashes (Error_Recovery_Skill pattern)
+- Error logging with traceback via centralized log_manager
+- Auto-rotation when log files exceed 1 MB
 
 Usage:
     python file_watcher.py
@@ -19,6 +20,13 @@ Press Ctrl+C to stop the watcher.
 import os
 import time
 from datetime import datetime
+
+# Centralized logging — replaces duplicated log_error / log_to_system_log
+from log_manager import (
+    log_error as _base_log_error,
+    log_to_system_log,
+    ensure_folder_exists,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -44,81 +52,14 @@ processed_files = set()
 
 
 # =============================================================================
-# ERROR HANDLING UTILITIES
+# ERROR HANDLING — delegates to centralized log_manager.py
 # =============================================================================
 
 def log_error(error_message):
-    """
-    Write an error message to the error log file with a timestamp.
+    """Route errors to the centralized log_manager with this watcher's log file."""
+    _base_log_error(error_message, error_log_file=ERROR_LOG_FILE)
 
-    This function is called whenever something goes wrong. It writes the error
-    to a log file so you can review what happened later, even if you weren't
-    watching the console.
-
-    Args:
-        error_message: A string describing what went wrong.
-
-    Why this matters:
-        - Errors are recorded even if no one is watching
-        - You can review the log file later to diagnose issues
-        - The script continues running instead of crashing
-    """
-    # Get the current time for the log entry
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # Format the log entry with timestamp and error message
-    log_entry = f"[{timestamp}] ERROR: {error_message}\n"
-
-    try:
-        # Ensure the Logs folder exists before writing
-        # exist_ok=True means "don't error if folder already exists"
-        os.makedirs(LOGS_FOLDER, exist_ok=True)
-
-        # Open the log file in "append" mode ('a') so we add to it, not overwrite
-        # encoding="utf-8" ensures special characters are handled properly
-        with open(ERROR_LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(log_entry)
-
-        # Also print to console so the user sees it immediately
-        print(f"[ERROR LOGGED] {error_message}")
-
-    except Exception as e:
-        # If we can't even write to the log file, at least print to console
-        # This is a "last resort" fallback
-        print(f"[CRITICAL] Could not write to error log: {e}")
-        print(f"[ORIGINAL ERROR] {error_message}")
-
-
-def ensure_folder_exists(folder_path, folder_name):
-    """
-    Check if a folder exists, and create it if it doesn't.
-
-    This is a helper function that safely creates folders. It handles errors
-    gracefully and logs them if something goes wrong.
-
-    Args:
-        folder_path: The full path to the folder.
-        folder_name: A friendly name for the folder (used in messages).
-
-    Returns:
-        bool: True if the folder exists (or was created), False if creation failed.
-    """
-    try:
-        if not os.path.exists(folder_path):
-            # Create the folder (and any parent folders if needed)
-            os.makedirs(folder_path)
-            print(f"[SETUP] Created {folder_name} folder: {folder_path}")
-        return True
-
-    except PermissionError:
-        # This happens if you don't have permission to create folders here
-        log_error(f"Permission denied when creating {folder_name} folder at {folder_path}")
-        return False
-
-    except Exception as e:
-        # Catch any other unexpected errors
-        log_error(f"Failed to create {folder_name} folder: {e}")
-        return False
+# ensure_folder_exists and log_to_system_log are imported directly from log_manager
 
 
 # =============================================================================
