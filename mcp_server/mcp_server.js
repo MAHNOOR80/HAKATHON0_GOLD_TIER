@@ -35,9 +35,8 @@ import nodemailer from 'nodemailer';
 // =============================================================================
 
 // SMTP Configuration - Set these via environment variables for security
-// For testing, you can use a service like Ethereal (https://ethereal.email/)
 const SMTP_CONFIG = {
-  host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
   auth: {
@@ -101,33 +100,18 @@ let transporter = null;
 
 /**
  * Initialize the email transporter.
- * In test mode, creates a test account on Ethereal.
+ * Always uses configured SMTP settings — no Ethereal fallback.
  */
 async function initializeTransporter() {
-  if (TEST_MODE && !SMTP_CONFIG.auth.user) {
-    // Create a test account on Ethereal for testing
-    console.error('[MCP] Test mode: Creating Ethereal test account...');
-    try {
-      const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-      console.error(`[MCP] Test account created: ${testAccount.user}`);
-      console.error('[MCP] View sent emails at: https://ethereal.email/');
-    } catch (error) {
-      console.error('[MCP] Could not create test account, using mock mode');
-      transporter = null;
-    }
-  } else {
-    // Use configured SMTP settings
-    transporter = nodemailer.createTransport(SMTP_CONFIG);
+  if (!SMTP_CONFIG.auth.user) {
+    console.error('[MCP] WARNING: No SMTP credentials configured (SMTP_USER is empty)');
+    console.error('[MCP] Email will run in mock mode — set SMTP_USER and SMTP_PASS in .env');
+    transporter = null;
+    return;
   }
+
+  transporter = nodemailer.createTransport(SMTP_CONFIG);
+  console.error(`[MCP] SMTP configured: ${SMTP_CONFIG.host}:${SMTP_CONFIG.port} as ${SMTP_CONFIG.auth.user}`);
 }
 
 
@@ -449,25 +433,13 @@ async function handleSendEmail(params) {
     // Send the email
     const info = await transporter.sendMail(mailOptions);
 
-    // Build response
-    const result = {
+    console.error(`[MCP] Email sent successfully to ${to} (messageId: ${info.messageId})`);
+    return {
       success: true,
       messageId: info.messageId,
       to: to,
       subject: subject,
     };
-
-    // If using Ethereal, include preview URL
-    if (info.messageId && TEST_MODE) {
-      const previewUrl = nodemailer.getTestMessageUrl(info);
-      if (previewUrl) {
-        result.previewUrl = previewUrl;
-        console.error(`[MCP] Preview URL: ${previewUrl}`);
-      }
-    }
-
-    console.error(`[MCP] Email sent successfully to ${to}`);
-    return result;
 
   } catch (error) {
     console.error(`[MCP] Email send failed: ${error.message}`);
@@ -481,7 +453,9 @@ async function handleSendEmail(params) {
 
 
 /**
- * Post content to LinkedIn using the REST API.
+ * Post content to LinkedIn using the official REST API v2 (/rest/posts).
+ *
+ * API docs: https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api
  *
  * @param {Object} params - Post parameters
  * @param {string} params.content - The text content to post
@@ -534,13 +508,14 @@ async function handlePostLinkedin(params) {
       content: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
       visibility: vis,
       characterCount: content.length,
-      note: 'Set LINKEDIN_ACCESS_TOKEN and LINKEDIN_PERSON_URN for live posting',
+      note: 'Run "node linkedin_auth.js" to get LINKEDIN_ACCESS_TOKEN and LINKEDIN_PERSON_URN',
     };
   }
 
-  // ---- LIVE MODE ----
+  // ---- LIVE MODE — LinkedIn UGC Posts API (/v2/ugcPosts) ----
+  // "Share on LinkedIn" product provides w_member_social scope + UGC API access.
+  // The newer /rest/posts endpoint requires Community Management API (separate product).
   try {
-    // LinkedIn UGC Post API payload
     const postBody = {
       author: LINKEDIN_CONFIG.personUrn,
       lifecycleState: 'PUBLISHED',
@@ -567,27 +542,42 @@ async function handlePostLinkedin(params) {
       body: JSON.stringify(postBody),
     });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`[MCP] LinkedIn API error: ${response.status} - ${errorBody}`);
+    if (response.status === 201 || response.ok) {
+      const data = await response.json();
+      const postId = data.id || response.headers.get('x-restli-id') || '';
+
+      console.error(`[MCP] LinkedIn post published successfully: ${postId}`);
       return {
-        success: false,
-        error: `LinkedIn API error: ${response.status}`,
-        details: errorBody,
+        success: true,
+        mode: 'live',
+        postId: postId,
+        postUrl: postId
+          ? `https://www.linkedin.com/feed/update/${postId}`
+          : 'https://www.linkedin.com/feed/',
+        visibility: vis,
+        characterCount: content.length,
+        message: `Post published to LinkedIn (${vis})`,
       };
     }
 
-    const data = await response.json();
-    const postId = data.id || 'unknown';
+    // Error response
+    const errorBody = await response.text();
+    console.error(`[MCP] LinkedIn API error: ${response.status} - ${errorBody}`);
 
-    console.error(`[MCP] LinkedIn post published successfully: ${postId}`);
+    let hint = '';
+    if (response.status === 401) {
+      hint = 'Access token expired or invalid. Run "node linkedin_auth.js" to get a new token.';
+    } else if (response.status === 403) {
+      hint = 'Missing permissions. Ensure your LinkedIn app has the "w_member_social" scope.';
+    } else if (response.status === 422) {
+      hint = 'Invalid post data. Check LINKEDIN_PERSON_URN format (should be urn:li:member:<numeric_id>).';
+    }
+
     return {
-      success: true,
-      mode: 'live',
-      postId: postId,
-      postUrl: `https://www.linkedin.com/feed/update/${postId}`,
-      visibility: vis,
-      characterCount: content.length,
+      success: false,
+      error: `LinkedIn API error: ${response.status}`,
+      details: errorBody,
+      hint: hint || undefined,
     };
 
   } catch (error) {
@@ -863,7 +853,7 @@ async function odooLogPayment(params) {
     partner_type: partnerType,
     partner_id: partnerId,
     amount: amount,
-    ref: description || undefined,
+    // Note: 'ref' field removed — not available in this Odoo version (saas~19.1)
   };
 
   if (journalId) {
@@ -874,7 +864,7 @@ async function odooLogPayment(params) {
 
   // Read back the payment
   const payments = await odooExecute('account.payment', 'read', [[paymentId]], {
-    fields: ['name', 'state', 'amount', 'payment_type', 'partner_id', 'ref'],
+    fields: ['name', 'state', 'amount', 'payment_type', 'partner_id'],
   });
 
   const pay = payments[0];
@@ -890,7 +880,7 @@ async function odooLogPayment(params) {
       customer: pay.partner_id?.[1] || customer,
       amount: pay.amount,
       type: pay.payment_type,
-      memo: pay.ref || '',
+      memo: description || '',
       state: pay.state,
     },
     message: `Payment ${pay.name} recorded — ${payment_type} $${pay.amount} for ${customer}`,

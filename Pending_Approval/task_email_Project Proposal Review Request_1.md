@@ -5,11 +5,12 @@ priority: medium
 created_at: 2026-02-06 01:37:38
 related_files: []
 approval_needed: true
-approved: false
-mcp_action: ['send_email']
+approved: true
+mcp_action:
+  - send_email
 source: gmail_watcher
-message_id: "<demo-1@gmail-watcher.demo>"
-approval_reason: "send_email requires human approval before execution"
+message_id: <demo-1@gmail-watcher.demo>
+approval_reason: send_email requires human approval before execution
 awaiting_approval_since: 2026-02-10 14:00:00
 ---
 

@@ -2,7 +2,22 @@
   "mcpServers": {
     "silver-email": {
       "command": "node",
-      "args": ["C:\\Hakathon0_ai_employee\\Gold\\mcp_server\\mcp_server.js"]
+      "args": ["C:\\Hakathon0_ai_employee\\Gold\\mcp_server\\mcp_server.js"],
+      "cwd": "C:\\Hakathon0_ai_employee\\Gold\\mcp_server",
+      "env": {
+        "SMTP_HOST": "smtp.gmail.com",
+        "SMTP_PORT": "587",
+        "SMTP_SECURE": "false",
+        "SMTP_USER": "drmallory900@gmail.com",
+        "SMTP_PASS": "pvke gaua beve kbvg",
+        "SMTP_FROM": "drmallory900@gmail.com",
+        "ODOO_URL": "https://tpx-yard.odoo.com/odoo",
+        "ODOO_DB": "tpx-yard",
+        "ODOO_USERNAME": "mahno9248@gmail.com",
+        "ODOO_API_KEY": "fee36a9e026cd70aecca6fa7bc9bdfb2386e82cc",
+        "LINKEDIN_ACCESS_TOKEN": "AQVpY9qH2DTHfQccUtPC7abQfWxCKm4ZMFBOdgeyRk_FanIXUHqXE__M2SeJhMuwFW0vvohnuIoQZIgg_CDW0MQZ6ZX6jEtVc4qbXe-rPTue6wfhA6z2LsHsKE3O8lsdvckwBeAdIdm4mWIKhJE0GnCctzLjElPKBTD8RhKcpFuRVZwT1MODgISRiAMZncO_NmaeKAWjpXkvqQQ502hbkdIXMP1pJ5lEIfrFIFXM90I-Lfz5n8hP_k8pf6zqA-taUo9NzUpkhFjJDZZ8KTKCjtfVdO6ufQ5YDyEnt9vgsSEVjAkFxN_ENwm4XntIdToFu8yGOVZVJJJVDSXnX82gd5eFADIj1w",
+        "LINKEDIN_PERSON_URN": "urn:li:person:qQcb6BjIxY"
+      }
     }
   }
 }

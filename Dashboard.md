@@ -13,12 +13,29 @@
 
 ---
 
+## Pending Replies
+
+Reply drafts below are ready for your review. To authorize sending, tell me: **"Approve and send reply for [name]"**
+
+| Reply Draft | To | Subject | Status | Location |
+|-------------|----|---------|--------|----------|
+| ~~Title Ceremony Invitation~~ | mahno9248@gmail.com | Re: invitation for title ceremony | **Sent** | [[Plans/Gmail_Reply_Draft_invitation_for_title_ceremony_2026-02-13.md]] |
+| Resume for job | mahno9248@gmail.com | Re: Resume for job | Pending Approval | [[Plans/Gmail_Reply_Draft_Resume_for_job_2026-02-12.md]] |
+| ~~AI Event Invitation~~ | mahno9248@gmail.com | You're Invited: Pakistan's Biggest AI Event | **Sent** | [[Plans/Gmail_Draft_Invitation_Pakistan_AI_Event_2026-02-12.md]] |
+| ~~AI Event Batch Invitation (2)~~ | mahno9248 + mahnoornaveed429 | You're Invited: Pakistan's Biggest AI Event 2026 | **Sent** | [[Plans/Gmail_Draft_AI_Event_Invitation_Batch_2026-02-12.md]] |
+| ~~Interview scheduling~~ | mahno9248@gmail.com | Re: interview | **Sent** | [[Plans/Gmail_Reply_Draft_interview_2026-02-12.md]] |
+
+---
+
 ## Pending Approval
 
 Tasks below require human approval before the AI Employee can execute them. To approve, open the task file and set `approved: true` in the YAML frontmatter. To reject, set `status: rejected`.
 
 | Task | Action | Flagged | Status | Location |
 |------|--------|---------|--------|----------|
+| Bank Review: test_bank_normal (2 anomalies) | odoo_accounting | 2026-02-13 22:20 | Anomalies Pending Approval | [[Pending_Approval/task_bank_review_test_bank_normal.md]] |
+| LinkedIn Post: AI Event Experience | post_linkedin | 2026-02-13 22:00 | Draft Ready — Awaiting Approval | [[Pending_Approval/task_linkedin_ai_event_experience.md]] |
+| ~~Email Reply: Re: invitation for title ceremony~~ | send_email | 2026-02-13 21:55 | **Approved & Sent** | [[Done/task_email_reply_invitation_for_title_ceremony.md]] |
 | Project Proposal Review Reply | send_email | 2026-02-10 14:00 | Awaiting Approval | [[Pending_Approval/task_email_Project Proposal Review Request_1.md]] |
 | Partnership Opportunity Reply | send_email | 2026-02-10 14:00 | Awaiting Approval | [[Pending_Approval/task_email_Partnership Opportunity - AI Consulting_1.md]] |
 
@@ -28,6 +45,17 @@ Tasks below require human approval before the AI Employee can execute them. To a
 
 | Task | Completed | Notes |
 |------|-----------|-------|
+| Bank Transactions Processed: test_bank_normal.csv | 2026-02-13 | Ralph Loop: 3 txns, $2,050 revenue, $45.50 expenses, net $2,004.50. 2 anomalies gated for approval. |
+| Email Sent: Re: invitation for title ceremony → mahno9248@gmail.com | 2026-02-13 | Approved and sent (ID: b7b8811b) |
+| First real LinkedIn post published via API | 2026-02-13 | Live post — ID: urn:li:share:7427823511747964928 |
+| Email Sent: Re: for interview → mahnoornaveed429@gmail.com | 2026-02-12 | Approved and sent (ID: 46ebbb01) |
+| Email Sent: AI Event 2026 → mahno9248@gmail.com | 2026-02-12 | Batch invitation sent (ID: 7786a407) |
+| Email Sent: AI Event 2026 → mahnoornaveed429@gmail.com | 2026-02-12 | Batch invitation sent (ID: a54250f9) |
+| Email Sent: AI Event Invitation → mahno9248@gmail.com | 2026-02-12 | Approved and sent (ID: 79f8a455) |
+| Email Sent: Re: interview → mahno9248@gmail.com | 2026-02-12 | Approved and sent (ID: 4a29775b) |
+| Email Sent: Follow-up on Proposal → mahno9248@gmail.com | 2026-02-12 | Approved and sent (ID: 6cf2f6a4) |
+| Google: Security alert | 2026-02-12 | Archived — no-reply automated notification, no action needed |
+| Google: 2-Step Verification turned on | 2026-02-12 | Archived — no-reply automated notification, no action needed |
 | Email: Weekly Industry Digest - AI Trends | 2026-02-10 | Newsletter archived — no reply needed |
 | LinkedIn Post: Consulting Services | 2026-02-05 | Approved — draft preserved for manual posting (post_linkedin MCP pending) |
 | Review file: The Importance of Education.txt | 2026-02-05 | Archived - educational essay |
@@ -50,6 +78,20 @@ Tasks below require human approval before the AI Employee can execute them. To a
 
 | Timestamp | Action | Target | Status | Notes |
 |-----------|--------|--------|--------|-------|
+| 2026-02-13 22:20 | Ralph Loop | Bank: test_bank_normal.csv | Complete | 3 txns processed, 2 anomalies ($1,200 + $850) gated for approval, task moved to /Done/ |
+| 2026-02-13 22:00 | LinkedIn Draft | LinkedIn (PUBLIC) | Pending Approval | "AI Event Experience" — draft ready in /Pending_Approval/ |
+| 2026-02-13 21:56 | send_email | mahno9248@gmail.com | Success | "Re: invitation for title ceremony" — approved and sent (ID: b7b8811b) |
+| 2026-02-13 21:55 | Reply Draft | mahno9248@gmail.com | Pending Approval | "Re: invitation for title ceremony" — draft ready in /Plans/ |
+| 2026-02-13 | post_linkedin | LinkedIn (PUBLIC) | Success | First real LinkedIn post — ID: urn:li:share:7427823511747964928 |
+| 2026-02-12 21:15 | send_email | mahnoornaveed429@gmail.com | Success | "Re: for interview" — approved and sent (ID: 46ebbb01) |
+| 2026-02-12 21:05 | send_email | mahno9248@gmail.com | Success | "AI Event 2026" batch invitation — approved and sent (ID: 7786a407) |
+| 2026-02-12 21:05 | send_email | mahnoornaveed429@gmail.com | Success | "AI Event 2026" batch invitation — approved and sent (ID: a54250f9) |
+| 2026-02-12 20:50 | send_email | mahno9248@gmail.com | Success | "Pakistan's Biggest AI Event" invitation — approved and sent (ID: 79f8a455) |
+| 2026-02-12 20:30 | Reply Draft | mahno9248@gmail.com | Pending Approval | "Re: Resume for job" — draft ready in /Plans/ |
+| 2026-02-12 20:35 | send_email | mahno9248@gmail.com | Success | "Re: interview" — approved and sent (ID: 4a29775b) |
+| 2026-02-12 20:30 | Archive | no-reply@accounts.google.com | Done | Security alert + 2-Step Verification — Google automated, no reply needed |
+| 2026-02-12 17:05 | send_email | mahno9248@gmail.com | Success | "Follow-up on Proposal" — approved and sent (ID: 6cf2f6a4) |
+| 2026-02-12 17:00 | Email Draft | mahno9248@gmail.com | Approved | New email: "Follow-up on Proposal" — draft created, approved, sent |
 | 2026-02-10 18:00 | CEO Briefing | 4-phase audit | Complete | Revenue +$14,300, Expenses -$14,027, Net +$273. 1 URGENT anomaly ($6.5K Unknown LLC). 2 approvals blocked 4 days. 1 hot lead. Delivery task created (approval_needed). |
 | 2026-02-10 18:00 | Odoo get_report | summary + weekly | Success | Test mode — $12,450 revenue, $8,326 expenses, $4,124 net, 5 invoices, 3 payments |
 | 2026-02-10 17:00 | Social Summary | LinkedIn + X | Complete | 5 posts, 107 likes, 27 comments, 5.7% engagement, 1 hot lead, 1 warm lead |
@@ -104,7 +146,7 @@ Tasks below require human approval before the AI Employee can execute them. To a
 - **Watchers:** file_watcher.py (file system), gmail_watcher.py (Gmail IMAP), bank_watcher.py (Bank CSV — Gold), social_watcher.py (LinkedIn/X — Gold)
 - **MCP Tools:** send_email, post_linkedin, check_email_config, odoo_accounting (Gold)
 - **Last Audit:** 12 tasks tracked (7 completed, 2 awaiting approval, 3 pending + 1 briefing delivery)
-- **Available Skills:** [[Agent_Skills/Plan_Tasks_Skill.md|Plan]], [[Agent_Skills/Approval_Check_Skill.md|Approval Gate]], [[Agent_Skills/Approval_Handler_Skill.md|Approval Handler]], [[Agent_Skills/LinkedIn_Post_Skill.md|LinkedIn Post]], [[Agent_Skills/MCP_Action_Logger_Skill.md|MCP Logger]], [[Agent_Skills/Ralph_Wiggum_Loop_Skill.md|Ralph Loop (Gold)]], [[Agent_Skills/Social_Summary_Skill.md|Social Summary (Gold)]], [[Agent_Skills/CEO_Briefing_Skill.md|CEO Briefing (Gold)]], [[Agent_Skills/Error_Recovery_Skill.md|Error Recovery (Gold)]]
+- **Available Skills:** [[Agent_Skills/Plan_Tasks_Skill.md|Plan]], [[Agent_Skills/Approval_Check_Skill.md|Approval Gate]], [[Agent_Skills/Approval_Handler_Skill.md|Approval Handler]], [[Agent_Skills/LinkedIn_Post_Skill.md|LinkedIn Post]], [[Agent_Skills/Gmail_Reply_And_Send_Skill.md|Gmail Reply & Send (Silver/Gold)]], [[Agent_Skills/MCP_Action_Logger_Skill.md|MCP Logger]], [[Agent_Skills/Ralph_Wiggum_Loop_Skill.md|Ralph Loop (Gold)]], [[Agent_Skills/Social_Summary_Skill.md|Social Summary (Gold)]], [[Agent_Skills/CEO_Briefing_Skill.md|CEO Briefing (Gold)]], [[Agent_Skills/Error_Recovery_Skill.md|Error Recovery (Gold)]]
 - **Gold Tier:** Ralph Wiggum Loop Skill active — self-referential stop hook. Use `ralph_wrapper.py` or prompt "Use Ralph_Wiggum_Loop_Skill on this task"
 - **Gold Tier:** Bank Watcher active — monitors /Bank_Drops for CSV files, parses transactions, flags anomalies > $500 for approval. Daily audit via scheduler.py.
 - **Gold Tier:** Odoo Accounting connected — tpx-yard.odoo.com (UID 2). Actions: create_invoice, log_payment, get_report. Financial actions gated by Approval_Check_Skill.

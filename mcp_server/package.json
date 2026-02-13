@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node mcp_server.js",
     "test": "node test_email.js",
-    "test-odoo": "node test_odoo.js"
+    "test-odoo": "node test_odoo.js",
+    "linkedin-auth": "node linkedin_auth.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
